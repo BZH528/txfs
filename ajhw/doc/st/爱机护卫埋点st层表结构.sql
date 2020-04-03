@@ -18,7 +18,7 @@ stored as parquet;
     statis_day          统计日期
     app_id              应用id
     indicator_name      指标名称
-    channel             渠道（不区分渠的道用‘all’代表）
+    channel             渠道（不区分渠的用‘all’代表）
     uv                  人数
     pv                  次数
  */

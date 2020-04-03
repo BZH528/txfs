@@ -21,7 +21,7 @@ db_domain=10.193.11.12
 # 数据库端口
 db_port=3306
 # 数据库名
-db_name=xiaojinhe
+db_name=txfs
 # 数据库用户名
 db_username=finebi
 # 数据库密码

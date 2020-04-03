@@ -18,11 +18,11 @@ echo "
 set mapred.job.queue.name=produce;
 insert overwrite table txfs_st_temp."${export_table}"
 select "${export_collums}" from txfs_st."${export_table}"
-where statis_day >='"${now_day}"' and indicator_name<>'NA'
+where statis_day >='"${now_day}"';
 "
 hive -e "
 set mapred.job.queue.name=produce;
 insert overwrite table txfs_st_temp."${export_table}"
 select "${export_collums}" from txfs_st."${export_table}"
-where statis_day >='"${now_day}"' and indicator_name<>'NA'
+where statis_day >='"${now_day}"';
 "

@@ -23,9 +23,9 @@ stored as parquet;
       pv                  次数
  */
 
--- 每天不区分渠道各行为次数和人数
+-- 每天所有渠道各行为次数和人数
 drop table if exist dm_m_spm_flow_daily;
-create table dm_m_spm_channel_flow_daily(
+create table dm_m_spm_flow_daily(
       statis_day          string,
       app_id              string,
       joint_spm_value     string,

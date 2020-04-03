@@ -29,8 +29,9 @@ echo "=======================$script_name:hive data process=====================
 hive -e "
 set mapred.job.queue.name=produce;
 
-
 insert overwrite table txfs_st.st_m_spm_flow_result_daily
+select * from txfs_st.st_m_spm_flow_result_daily where statis_day<>'$before_day';
+insert into table txfs_st.st_m_spm_flow_result_daily
 select t.statis_day statis_day,t.app_id app_id,
        '首页访问' indicator_name,
        t.channel channel,t.uv uv,t.pv pv
@@ -201,6 +202,14 @@ select t.statis_day statis_day,t.app_id app_id,
        t.channel channel,t.uv uv,t.pv pv
   from txfs_dm.dm_m_spm_channel_flow_daily t
  where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p33'
+
+       union all
+select t.statis_day statis_day,t.app_id app_id,
+       '上传IMEI截图按钮点击' indicator_name,
+       t.channel channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_channel_flow_daily t
+ where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p33.m71.b63'
+
 
         union all
 select t.statis_day statis_day,t.app_id app_id,
@@ -477,6 +486,13 @@ select t.statis_day statis_day,t.app_id app_id,
 
         union all
 select t.statis_day statis_day,t.app_id app_id,
+       '上传IMEI截图按钮点击' indicator_name,
+       'all' channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_flow_daily t
+ where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p33.m71.b63'
+
+        union all
+select t.statis_day statis_day,t.app_id app_id,
        (case t.joint_spm_value when 'a4.p33.m73_1' then 'IMEI图片智能识别成功'
         when 'a4.p33.m73_0' then 'IMEI图片智能识别失败'
         else 'NA' end) indicator_name,
@@ -572,7 +588,10 @@ select t.statis_day statis_day,t.app_id app_id,
        '在保期客服热线文字链' indicator_name,
        'all' channel,t.uv uv,t.pv pv
   from txfs_dm.dm_m_spm_flow_daily t
- where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p34.m77.b68'
+ where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p34.m77.b68';
+
+ insert overwrite table txfs_st.st_m_spm_flow_result_daily
+ select * from txfs_st.st_m_spm_flow_result_daily where indicator_name<>'NA';
 
 
 
