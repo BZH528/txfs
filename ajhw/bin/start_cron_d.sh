@@ -20,14 +20,14 @@ kinit -kt /opt/keytab/dx_yuka.keytab dx_yuka
 start_time=`/bin/date "+%Y-%m-%d %H:%M:%S"`
 echo "start_time=$start_time"
 # 统计时间
-before_day=`/bin/date "+%Y-%m-%d %H:%M:%S" -d "$now_day -1 day"`
+before_day=`/bin/date "+%Y-%m-%d" -d "$now_day -1 day"`
 echo "before_day="$before_day
 
 #执行dw层脚本
 sh $basepath/all/all_dw_d.sh $before_day || error_report_and_exit $script_name $? $LINENO
 
 #执行dm层脚本
-sh $basepath/all/all_dm_d.sh.sh $before_day || error_report_and_exit $script_name $? $LINENO
+sh $basepath/all/all_dm_d.sh $before_day || error_report_and_exit $script_name $? $LINENO
 
 #执行st层脚本
 sh $basepath/all/all_st_d.sh $before_day || error_report_and_exit $script_name $? $LINENO

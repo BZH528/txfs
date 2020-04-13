@@ -16,8 +16,9 @@ echo "basepath=$basepath"
 source $basepath/../../sbin/util/error_helper.sh
 echo "=======================$script_name in $now_day : Process Script Start======================================"
 
+# 旧库地址 10.193.11.12
 # 数据库域名
-db_domain=10.193.11.12
+db_domain=172.31.28.13
 # 数据库端口
 db_port=3306
 # 数据库名

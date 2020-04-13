@@ -55,7 +55,7 @@ select from_unixtime(cast(cast(sd.spm_time as bigint)/1000 as bigint),'yyyy-MM-d
         count(*) action_num
   from txfs_ods.spm_data sd
  where from_unixtime(cast(cast(sd.spm_time as bigint)/1000 as bigint),'yyyy-MM-dd')='${before_day}'
-   and sd.app_id='1585751916000'
+   and sd.app_id='2019112569449509'
  group by from_unixtime(cast(cast(sd.spm_time as bigint)/1000 as bigint),'yyyy-MM-dd'),
           sd.app_id,
           sd.uid,
