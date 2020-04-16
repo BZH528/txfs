@@ -145,6 +145,28 @@ select t.statis_day statis_day,
   from finish_table_distinct_user t
  group by t.statis_day,
           t.app_id
+),
+-- 统计指标为收银台成功呼起的uv，去重uid
+checkstand_up_distinct_user as
+(
+select t.statis_day statis_day,
+       t.app_id app_id,
+       t.uid uid
+  from distinct_user t
+ where t.joint_spm_value in ('a4.p32.m67_success','a4.p32.m68_success')
+ group by t.statis_day,
+          t.app_id,
+          t.uid
+),
+-- 统计指标为收银台成功呼起的uv
+checkstand_up_uv_count as
+(
+select t.statis_day statis_day,
+       t.app_id app_id,
+       count(*) uv
+  from checkstand_up_distinct_user t
+ group by t.statis_day,
+          t.app_id
 )
 insert overwrite table txfs_dm.dm_m_spm_flow_daily
 select t1.statis_day statis_day,
@@ -173,7 +195,14 @@ select statis_day,
        uv,
        0 pv
   from finish_table_uv_count
-
+union all
+select statis_day,
+       app_id,
+       'checkstand_up' joint_spm_value,
+       uv,
+       0 pv
+  from checkstand_up_uv_count
+;
 " || error_report_and_exit $script_name $? $LINENO
 
 
