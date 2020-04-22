@@ -318,6 +318,48 @@ select t.statis_day statis_day,t.app_id app_id,
   from txfs_dm.dm_m_spm_channel_flow_daily t
   where t.statis_day='$before_day' and t.joint_spm_value = 'checkstand_up'
 
+    union all
+  select t.statis_day statis_day,t.app_id app_id,
+         '首页-待支付提醒弹窗' indicator_name,
+         t.channel channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_channel_flow_daily t
+  where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p32.m84'
+
+    union all
+  select t.statis_day statis_day,t.app_id app_id,
+         '首页-待支付提醒弹窗-继续支付按钮' indicator_name,
+         t.channel channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_channel_flow_daily t
+  where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p32.m84.b78'
+
+  union all
+  select t.statis_day statis_day,t.app_id app_id,
+         '首页-待支付提醒弹窗-关闭按钮' indicator_name,
+         t.channel channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_channel_flow_daily t
+  where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p32.m84.b79'
+
+  union all
+select t.statis_day statis_day,t.app_id app_id,
+       concat(split(t.joint_spm_value,'_')[1],'弹框') indicator_name,
+       t.channel channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_channel_flow_daily t
+ where t.statis_day='$before_day' and  t.joint_spm_value not in ('a4.p32.m59_1','a4.p32.m59_2','a4.p32.m59_3','a4.p32.m59_4') and t.joint_spm_value like 'a4.p32.m59_%' and t.joint_spm_value not like 'a4.p32.m59_%_%'
+
+union all
+select t.statis_day statis_day,t.app_id app_id,
+       concat(split(t.joint_spm_value,'_')[1],'弹框-领取按钮') indicator_name,
+       t.channel channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_channel_flow_daily t
+ where t.statis_day='$before_day' and t.joint_spm_value not in ('a4.p32.m59.b52_1_1','a4.p32.m59.b52_2_1','a4.p32.m59.b52_3_1','a4.p32.m59.b52_4_1') and t.joint_spm_value like 'a4.p32.m59.b52_%_1'
+
+union all
+select t.statis_day statis_day,t.app_id app_id,
+       concat(split(t.joint_spm_value,'_')[1],'弹框-关闭按钮') indicator_name,
+       t.channel channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_channel_flow_daily t
+ where t.statis_day='$before_day' and t.joint_spm_value not in ('a4.p32.m59.b52_1_0','a4.p32.m59.b52_2_0','a4.p32.m59.b52_3_0','a4.p32.m59.b52_4_0') and t.joint_spm_value like 'a4.p32.m59.b52_%_0'
+
  -- 不区分渠道的 channel:'all'
  union all
 select t.statis_day statis_day,t.app_id app_id,
@@ -603,10 +645,51 @@ select t.statis_day statis_day,t.app_id app_id,
        'all' channel,t.uv uv,t.pv pv
   from txfs_dm.dm_m_spm_flow_daily t
  where t.statis_day='$before_day' and t.joint_spm_value = 'checkstand_up'
- ;
 
- insert overwrite table txfs_st.st_m_spm_flow_result_daily
- select * from txfs_st.st_m_spm_flow_result_daily where indicator_name<>'NA';
+    union all
+select t.statis_day statis_day,t.app_id app_id,
+       '首页-待支付提醒弹窗' indicator_name,
+       'all' channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_flow_daily t
+ where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p32.m84'
+
+     union all
+select t.statis_day statis_day,t.app_id app_id,
+       '首页-待支付提醒弹窗-继续支付按钮' indicator_name,
+       'all' channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_flow_daily t
+ where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p32.m84.b78'
+
+     union all
+select t.statis_day statis_day,t.app_id app_id,
+       '首页-待支付提醒弹窗-关闭按钮' indicator_name,
+       'all' channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_flow_daily t
+ where t.statis_day='$before_day' and t.joint_spm_value = 'a4.p32.m84.b79'
+
+      union all
+select t.statis_day statis_day,t.app_id app_id,
+       concat(split(t.joint_spm_value,'_')[1],'弹框') indicator_name,
+       'all' channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_flow_daily t
+ where t.statis_day='$before_day' and  t.joint_spm_value not in ('a4.p32.m59_1','a4.p32.m59_2','a4.p32.m59_3','a4.p32.m59_4') and t.joint_spm_value like 'a4.p32.m59_%' and t.joint_spm_value not like 'a4.p32.m59_%_%'
+
+union all
+select t.statis_day statis_day,t.app_id app_id,
+       concat(split(t.joint_spm_value,'_')[1],'弹框-领取按钮') indicator_name,
+       'all' channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_flow_daily t
+ where t.statis_day='$before_day' and t.joint_spm_value not in ('a4.p32.m59.b52_1_1','a4.p32.m59.b52_2_1','a4.p32.m59.b52_3_1','a4.p32.m59.b52_4_1') and t.joint_spm_value like 'a4.p32.m59.b52_%_1'
+
+union all
+select t.statis_day statis_day,t.app_id app_id,
+       concat(split(t.joint_spm_value,'_')[1],'弹框-关闭按钮') indicator_name,
+       'all' channel,t.uv uv,t.pv pv
+  from txfs_dm.dm_m_spm_flow_daily t
+ where t.statis_day='$before_day' and t.joint_spm_value not in ('a4.p32.m59.b52_1_0','a4.p32.m59.b52_2_0','a4.p32.m59.b52_3_0','a4.p32.m59.b52_4_0') and t.joint_spm_value like 'a4.p32.m59.b52_%_0'
+ ;
+insert overwrite table txfs_st.st_m_spm_flow_result_daily
+select * from txfs_st.st_m_spm_flow_result_daily where indicator_name<>'NA';
 
 
 

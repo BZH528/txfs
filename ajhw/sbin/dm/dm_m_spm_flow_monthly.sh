@@ -1,0 +1,211 @@
+#!/bin/bash
+#
+# 产品名称：爱机护卫埋点数据DM层库表设计
+# 模块名称：每月不区分渠道各行为次数和人数
+# 模块版本：0.0.0.1
+# 编译环境：linux
+# 开发人员：毕智豪
+# 修改维护人员：
+# 修改日期：2020-04-19
+# 说明：
+
+basepath=$(cd `dirname $0`; pwd)
+echo "basepath=$basepath"
+
+script_name="$( basename "${BASH_SOURCE[0]}" )"
+# 引入基础函数
+source $basepath/../../sbin/util/error_helper.sh
+
+
+echo "=======================$script_name:Hive Data Process Script Start======================================"
+##create data path
+before_day=$1
+before_month=`/bin/date "+%Y-%m" -d "$before_day"`
+
+echo "\$before_day=$before_day"
+echo "\$before_month=$before_month"
+
+
+echo "=======================$script_name at the month $before_month:hive data process======================================"
+
+hive -e "
+set mapred.job.queue.name=produce;
+
+with pv_count as
+(
+select t.statis_month statis_month,
+       t.app_id app_id,
+       t.joint_spm_value joint_spm_value,
+       sum(t.action_num) pv
+  from txfs_dw.dw_m_spm_action_monthly t
+ where t.statis_month='$before_month'
+ group by t.statis_month,
+          t.app_id,
+          t.joint_spm_value
+),
+distinct_user as
+(
+select t.statis_month statis_month,
+       t.app_id app_id,
+       t.uid uid,
+       t.joint_spm_value joint_spm_value
+  from txfs_dw.dw_m_spm_action_monthly t
+ where t.statis_month='$before_month'
+ group by t.statis_month,
+          t.app_id,
+          t.uid,
+          t.joint_spm_value
+),
+uv_count as
+(
+select t.statis_month statis_month,
+       t.app_id app_id,
+       t.joint_spm_value joint_spm_value,
+       count(*) uv
+  from distinct_user t
+ group by t.statis_month,
+          t.app_id,
+          t.joint_spm_value
+),
+-- 特殊总计pv,包括首页总计,IMEI有效性校验成功
+special_page_pv_count as (
+    select t.statis_month statis_month,
+           t.app_id app_id,
+            (case when split(t.joint_spm_value,'_')[0]='a4.p32' then 'a4.p32'
+              when split(t.joint_spm_value,'_')[0]='a4.p33.m74' then concat(split(t.joint_spm_value,'_')[0],'-',split(t.joint_spm_value,'_')[2])
+               else 'NA' end) joint_spm_value,
+           sum(t.action_num) pv
+      from txfs_dw.dw_m_spm_action_monthly t
+     where t.statis_month='$before_month'
+       and (t.joint_spm_value like 'a4.p32%' or t.joint_spm_value like 'a4.p33.m74%')
+     group by t.statis_month,
+              t.app_id,
+              (case when split(t.joint_spm_value,'_')[0]='a4.p32' then 'a4.p32'
+               when split(t.joint_spm_value,'_')[0]='a4.p33.m74' then concat(split(t.joint_spm_value,'_')[0],'-',split(t.joint_spm_value,'_')[2])
+               else 'NA' end)
+
+),
+-- 特殊总计uv去重,包括首页总计,IMEI有效性校验成功
+special_page_distinct_user as (
+select t.statis_month statis_month,
+       t.app_id app_id,
+       t.uid uid,
+       (case when split(t.joint_spm_value,'_')[0]='a4.p32' then 'a4.p32'
+        when split(t.joint_spm_value,'_')[0]='a4.p33.m74' then concat(split(t.joint_spm_value,'_')[0],'-',split(t.joint_spm_value,'_')[2])
+        else 'NA' end) joint_spm_value
+  from txfs_dw.dw_m_spm_action_monthly t
+ where t.statis_month='$before_month'
+   and (t.joint_spm_value like 'a4.p32%' or t.joint_spm_value like 'a4.p33.m74%')
+ group by t.statis_month,
+          t.app_id,
+          t.uid,
+          (case when split(t.joint_spm_value,'_')[0]='a4.p32' then 'a4.p32'
+           when split(t.joint_spm_value,'_')[0]='a4.p33.m74' then concat(split(t.joint_spm_value,'_')[0],'-',split(t.joint_spm_value,'_')[2])
+           else 'NA' end)
+),
+-- 特殊总计uv,包括首页总计,IMEI有效性校验成功
+special_page_uv_count as
+(
+select t.statis_month statis_month,
+       t.app_id app_id,
+       t.joint_spm_value joint_spm_value,
+       count(*) uv
+  from special_page_distinct_user t
+ group by t.statis_month,
+          t.app_id,
+          t.joint_spm_value
+),
+-- 统计指标为完成表单填写的uv，去重uid
+finish_table_distinct_user as
+(
+select
+             t1.statis_month statis_month,
+             t1.app_id app_id,
+             t1.uid uid
+from
+    (
+    select *
+      from special_page_distinct_user t
+      where t.joint_spm_value = 'a4.p33.m74-1'
+    ) t1
+    join
+    (
+    select *
+      from distinct_user t
+     where t.joint_spm_value='a4.p32.m61.b54_1'
+    ) t2
+    on t1.statis_month=t2.statis_month and t1.app_id=t2.app_id and t1.uid=t2.uid
+    group by t1.statis_month,
+             t1.app_id,
+             t1.uid
+),
+-- 统计指标为完成表单填写的uv
+finish_table_uv_count as(
+select t.statis_month statis_month,
+       t.app_id app_id,
+       count(*) uv
+  from finish_table_distinct_user t
+ group by t.statis_month,
+          t.app_id
+),
+-- 统计指标为收银台成功呼起的uv，去重uid
+checkstand_up_distinct_user as
+(
+select t.statis_month statis_month,
+       t.app_id app_id,
+       t.uid uid
+  from distinct_user t
+ where t.joint_spm_value in ('a4.p32.m67_success','a4.p32.m68_success')
+ group by t.statis_month,
+          t.app_id,
+          t.uid
+),
+-- 统计指标为收银台成功呼起的uv
+checkstand_up_uv_count as
+(
+select t.statis_month statis_month,
+       t.app_id app_id,
+       count(*) uv
+  from checkstand_up_distinct_user t
+ group by t.statis_month,
+          t.app_id
+)
+insert overwrite table txfs_dm.dm_m_spm_flow_monthly
+select t1.statis_month statis_month,
+       t1.app_id app_id,
+       t1.joint_spm_value joint_spm_value,
+       nvl(t2.uv,0) uv,
+       t1.pv pv
+  from pv_count t1
+  left join uv_count t2
+    on t1.statis_month=t2.statis_month and t1.app_id=t2.app_id  and t1.joint_spm_value=t2.joint_spm_value
+ where t1.joint_spm_value<>'NA'
+union all
+select t1.statis_month statis_month,
+       t1.app_id app_id,
+       t1.joint_spm_value joint_spm_value,
+       nvl(t2.uv,0) uv,
+       t1.pv pv
+  from special_page_pv_count t1
+  left join special_page_uv_count t2
+    on t1.statis_month=t2.statis_month and t1.app_id=t2.app_id  and t1.joint_spm_value=t2.joint_spm_value
+ where t1.joint_spm_value<>'NA'
+union all
+select statis_month,
+       app_id,
+       'finish_table' joint_spm_value,
+       uv,
+       0 pv
+  from finish_table_uv_count
+union all
+select statis_month,
+       app_id,
+       'checkstand_up' joint_spm_value,
+       uv,
+       0 pv
+  from checkstand_up_uv_count
+;
+" || error_report_and_exit $script_name $? $LINENO
+
+
+echo "=======================$script_name:Hive Data Process Script End======================================"

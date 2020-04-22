@@ -4,9 +4,10 @@
 # 模块版本：0.0.0.1
 # 编译环境：linux
 # 修改人员：bizhihao
-# 修改日期：2020-03-29
+# 修改日期：2020-04-19
 # 修改内容：执行当前时间前一天的统计过程
 # 引入基础函数
+# 备注：2020-04-19新增调度周报和月报计算脚本
 
 basepath=$(cd `dirname $0`; pwd)
 echo "basepath=$basepath"
@@ -21,7 +22,15 @@ start_time=`/bin/date "+%Y-%m-%d %H:%M:%S"`
 echo "start_time=$start_time"
 # 统计时间
 before_day=`/bin/date "+%Y-%m-%d" -d "$now_day -1 day"`
-echo "before_day="$before_day
+
+# 时间所在周几
+partition_week=`/bin/date "+%w" -d "$now_day"`
+# 时间所在日期
+partition_month=`/bin/date "+%d" -d "$now_day"`
+
+echo "before_day=$before_day"
+echo "partition_week=$partition_week"
+echo "partition_month=$partition_month"
 
 #执行dw层脚本
 sh $basepath/all/all_dw_d.sh $before_day || error_report_and_exit $script_name $? $LINENO
@@ -34,6 +43,16 @@ sh $basepath/all/all_st_d.sh $before_day || error_report_and_exit $script_name $
 
 #执行sqoop层脚本
 sh $basepath/all/all_sqoop_d.sh $before_day || error_report_and_exit $script_name $? $LINENO
+
+#每周一执行
+if [ $partition_week -eq 1 ]; then
+  sh $basepath/week_start.sh $before_day
+fi
+
+#每月一号执行
+if [ $partition_month -eq 01 ]; then
+  sh $basepath/month_start.sh $before_day
+fi
 
 end_time=`/bin/date "+%Y-%m-%d %H:%M:%S"`
 echo "end_time=$end_time"
