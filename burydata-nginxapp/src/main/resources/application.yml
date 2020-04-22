@@ -1,0 +1,5 @@
+mykafka:
+  brokerList: 172.31.21.11:9092,172.31.21.12:9092,172.31.21.13:9092
+  topic: buryData
+  retries_config: 5
+  acks_config: 1
